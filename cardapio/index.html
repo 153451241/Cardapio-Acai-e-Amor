@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardápio Açaí & Amor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      /* 🔧 Ajuste visual das sugestões de endereço */
+      #sugestoes {
+        background: #2a153b;
+        color: white;
+        border: 1px solid #7b1fa2;
+        border-radius: 10px;
+        list-style: none;
+        padding: 0;
+        margin-top: 5px;
+        max-height: 160px;
+        overflow-y: auto;
+        display: none;
+        text-align: left;
+        position: relative;
+        z-index: 9999;
+      }
+
+      #sugestoes li {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      #sugestoes li:hover {
+        background: #7b1fa2;
+      }
+
+      #resultadoEntrega {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      /* ========================================================== */
+      /* === CSS DO NOVO MODAL DE NOME === */
+      /* ========================================================== */
+
+      .modal-nome-backdrop {
+        /* Começa escondido. O JS vai mostrar */
+        display: none;
+        position: fixed;
+        z-index: 2000; /* Acima de tudo */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        /* O JS vai mudar para 'display: flex' para mostrar */
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-nome-content {
+        display: block; /* Garante que o conteúdo apareça */
+        background: var(--card, #16131b); /* Pega a cor do seu Card */
+        color: var(--text, #ffffff); /* Pega a cor do seu Texto */
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 380px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-nome-content h3 {
+        color: var(
+          --brand-pink,
+          #fcd594
+        ); /* Pega a cor de destaque */
+        margin-top: 0;
+        font-size: 1.5em;
+      }
+
+      .modal-nome-content p {
+        font-size: 0.95em;
+        color: var(--muted, #cfcfe3); /* Pega a cor de texto suave */
+        margin-bottom: 20px;
+      }
+
+      .modal-nome-content input {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid var(--stroke, #2a153b);
+        background: var(--bg, #0f0f12);
+        color: var(--text, #ffffff);
+        font-size: 1em;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .modal-nome-content input:focus {
+        border-color: var(--brand-pink, #fcd594);
+        outline: none;
+      }
+
+      .modal-nome-content button {
+        width: 100%;
+        font-size: 1.1em;
+        padding: 12px;
+        /* A classe 'btn-primario' já deve ser estilizada pelo seu style.css */
+      }
+    </style>
+  </head>
+
+  <body>
+
+<div id="loja-fechada-overlay" style="display: none">
+    <div class="loja-fechada-content">
+      <img
+        src="img/acai-logo.png"
+        alt="Açaí & Amor"
+        style="width: 100px; margin-bottom: 20px"
+      />
+      <h1>Loja Fechada</h1>
+      <p id="loja-fechada-mensagem"></p>
+    </div>
+  </div>
+
+    
+    <div class="fundo-decorativo">
+    <img src="img/acai-bis.jpeg" alt="Açaí decorativo 1">
+    <img src="img/acai-banana.jpeg" alt="Açaí decorativo 2">
+    <img src="img/acai-croc.jpeg" alt="Açaí decorativo 3">
+    <img src="img/acai-fit.jpeg" alt="Açaí decorativo 4">
+    <img src="img/acai-power.jpeg" alt="Açaí decorativo 5">
+    </div>
+  
+
+    <header class="brand-header">
+      <div class="brand-wrap">
+        <img class="brand-logo" src="img/acai-logo.png" alt="Açaí & Amor" />
+        <div class="brand-titles">
+          <h1 class="brand-name"></h1>
+          <p class="brand-tag"></p>
+        </div>
+      </div>
+
+    </header>
+
+    <section id="Acai-Pronto">
+      <h2>Monte Seu Açaí</h2>
+
+      <div class="grid-produtos">
+        <div class="item" data-name="Monte seu Açaí" data-price-base="11.99">
+          <img src="img/acai-monte.jpeg" alt="Monte seu Açaí" />
+          <h3>Monte seu Açaí</h3>
+          <span>A partir de R$ 11,99</span>
+          <button class="btn-abrir-modal">Quero montar o meu!</button>
+        </div>
+
+        </div>
+      </section>
+    <div id="sacola" class="sacola">
+      <h3>🛒 Sua sacola:</h3>
+      <ul id="lista-sacola"></ul>
+      <p id="total-sacola"><strong>Total:</strong> R$ 0,00</p>
+      <button id="btn-revisar" class="btn-primario">🔎 Revisar pedido</button>
+    </div>
+
+    
+    <div id="modal" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <button class="modal-close" id="modalClose">✕</button>
+        <img id="modalImg" src="" alt="" />
+        <h3 id="modalTitle">Título</h3>
+        <p id="modalDesc">Descrição</p>
+
+        <div id="modalOpcoes" class="modal-opcoes"></div>
+
+        <p class="modal-preco">
+          Preço total: <span id="modalPrice">R$ 0,00</span>
+        </p>
+
+        <label class="modal-label">Observação (opcional)</label>
+        <textarea
+          id="modalObs"
+          placeholder="Ex.: sem cebola, pouco queijo"
+        ></textarea>
+
+        <div class="modal-actions">
+          <button id="modalAdd" class="btn-primario">
+            🛍️ Adicionar à sacola
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="revisao" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <button class="modal-close" id="revisaoClose">✕</button>
+
+        <h3>Revisar pedido</h3>
+        <ul id="revisaoLista" class="revisao-lista"></ul>
+
+        <div class="entrega">
+          <p style="margin-bottom: 8px"><strong>Opção de entrega:</strong></p>
+
+          <label class="toggle-btn">
+            <input
+              type="radio"
+              name="tipoEntrega"
+              value="retirada"
+              id="opcaoRetirada"
+            />
+            Retirada no local
+          </label>
+
+          <label class="toggle-btn">
+            <input type="radio" name="tipoEntrega" value="entrega" checked />
+            Entrega
+          </label>
+
+          <div id="campoEndereco" style="margin-top: 10px">
+            <label for="endereco">Endereço</label>
+            <input
+              id="endereco"
+              type="text"
+              placeholder="Rua, nº, bairro"
+              autocomplete="off"
+            />
+            <ul id="sugestoes"></ul>
+            <button
+              id="btnCalcularEntrega"
+              class="btn-primario"
+              type="button"
+              onclick="calcularEntrega()"
+            >
+              🚗 Calcular entrega
+            </button>
+            <div id="resultadoEntrega"></div>
+          </div>
+
+          <div
+            id="infoRetirada"
+            style="display: none; margin-top: 10px; color: #ccc"
+          >
+            Endereço para retirada:
+            <strong>Av. Pref. Moacyr Freire, 371 - Prefeito Moacyr Freire, Taubaté - SP, 12060-801</strong>
+          </div>
+
+          <label for="taxa" style="display: none">Taxa de entrega (R$)</label>
+          <input
+            id="taxa"
+            type="number"
+            step="0.01"
+            min="0"
+            value="0"
+            readonly
+            style="display: none"
+          />
+        </div>
+
+        <div class="pagamento" style="margin-top: 16px">
+          <label><strong>Forma de pagamento</strong></label>
+          <div class="opcoes-pagamento" style="margin-top: 6px">
+            <label
+              ><input type="radio" name="pagamento" value="Cartão" checked />
+              Débito / Crédito</label
+            ><br />
+            <label><input type="radio" name="pagamento" value="Pix" /> Pix</label
+            ><br />
+            <label
+              ><input type="radio" name="pagamento" value="Dinheiro" />
+              Dinheiro</label
+            >
+          </div>
+
+          <p
+            id="resumoTroco"
+            style="
+              display: none;
+              margin-top: 6px;
+              color: #ccc;
+              font-size: 14px;
+            "
+          ></p>
+        </div>
+
+        <p class="totais" style="margin-top: 12px">
+          Subtotal: <span id="revSubtotal">R$ 0,00</span><br />
+          Entrega: <span id="revTaxa">R$ 0,00</span><br />
+          <strong>Total: <span id="revTotal">R$ 0,00</span></strong>
+        </p>
+
+        <div class="modal-actions">
+          <button id="revisaoConfirmar" class="btn-whats">
+            ✅ Confirmar e enviar no WhatsApp
+          </button>
+        </div>
+
+        <div id="popupTroco" aria-hidden="true">
+          <div class="popup-card">
+            <p>Informe o valor que possui em dinheiro:</p>
+            <input
+              type="number"
+              id="valorTroco"
+              placeholder="Ex: 30.00"
+              step="0.01"
+              min="0"
+            />
+            <button id="confirmarTroco" class="btn-primario">Confirmar</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    <div id="painelAdicionais" class="modal" aria-hidden="true">
+      <div class="modal-content" style="max-width: 400px">
+        <button class="modal-close" onclick="fecharPainelAdicionais()">✕</button>
+        <h3>Gerenciar Adicionais</h3>
+        <ul id="listaAdicionais" style="list-style: none; padding: 0"></ul>
+      </div>
+    </div>
+    
+  <div id="modal-acai-builder" class="acai-modal-container">
+  <div class="acai-modal-content">
+    <div class="acai-modal-header">
+      <h2>Monte seu Açaí</h2>
+      <button class="btn-fechar-modal">×</button>
+    </div>
+
+    <div class="acai-modal-body">
+      <fieldset class="step-tamanho">
+        <legend>Passo 1: Qual o tamanho?</legend>
+        <div class="opcao-item">
+          <input
+            type="radio"
+            id="t-300"
+            name="tamanho"
+            value="300ml"
+            data-price="11.99"
+            checked
+          />
+          <label for="t-300">
+            <span>300ml</span>
+            <span class="preco-opcao">R$ 11,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="radio"
+            id="t-400"
+            name="tamanho"
+            value="400ml"
+            data-price="14.99"
+          />
+          <label for="t-400">
+            <span>400ml</span>
+            <span class="preco-opcao">R$ 14,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="radio"
+            id="t-500"
+            name="tamanho"
+            value="500ml"
+            data-price="16.99"
+          />
+          <label for="t-500">
+            <span>500ml</span>
+            <span class="preco-opcao">R$ 16,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="radio"
+            id="t-700"
+            name="tamanho"
+            value="700ml"
+            data-price="19.99"
+          />
+          <label for="t-700">
+            <span>700ml</span>
+            <span class="preco-opcao">R$ 19,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="radio"
+            id="t-1000"
+            name="tamanho"
+            value="1 Litro"
+            data-price="26.99"
+          />
+          <label for="t-1000">
+            <span>1 Litro</span>
+            <span class="preco-opcao">R$ 26,99</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="step-base">
+  <legend>Passo 2: Escolha a base (pelo menos 1 obrigatório)</legend>
+  
+  <div class="opcao-item">
+    <input
+      type="checkbox"  id="b-acai"
+      name="base_selecao" value="Açaí"
+      data-price="0"
+      checked
+    />
+    <label for="b-acai">
+      <span>Açaí</span>
+      <span class="preco-opcao">+R$ 0,00</span>
+    </label>
+  </div>
+  
+  <div class="opcao-item">
+    <input
+      type="checkbox"  id="b-cupu"
+      name="base_selecao" value="Cupuaçu"
+      data-price="0" 
+      />
+    <label for="b-cupu">
+      <span>Cupuaçu</span>
+      <span class="preco-opcao">+R$ 0,00</span>
+    </label>
+  </div>
+</fieldset>
+
+      <fieldset class="step-adicionais">
+        <legend>Passo 3: Adicionais (R$ 1,99 cada)</legend>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-condensado"
+            name="adicional"
+            value="Leite condensado"
+            data-price="1.99"
+          />
+          <label for="ad-condensado">
+            <span>Leite condensado</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-leitepo"
+            name="adicional"
+            value="Leite em pó"
+            data-price="1.99"
+          />
+          <label for="ad-leitepo">
+            <span>Leite em pó</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-farinha"
+            name="adicional"
+            value="Farinha Láctea"
+            data-price="1.99"
+          />
+          <label for="ad-farinha">
+            <span>Farinha Láctea</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-danone"
+            name="adicional"
+            value="Danone"
+            data-price="1.99"
+          />
+          <label for="ad-danone">
+            <span>Danone</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-granola"
+            name="adicional"
+            value="Granola"
+            data-price="1.99"
+          />
+          <label for="ad-granola">
+            <span>Granola</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-bispreto"
+            name="adicional"
+            value="Bis preto"
+            data-price="1.99"
+          />
+          <label for="ad-bispreto">
+            <span>Bis preto</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-bisbranco"
+            name="adicional"
+            value="Bis branco"
+            data-price="1.99"
+          />
+          <label for="ad-bisbranco">
+            <span>Bis branco</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-pacoca"
+            name="adicional"
+            value="Paçoca"
+            data-price="1.99"
+          />
+          <label for="ad-pacoca">
+            <span>Paçoca</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-gotas"
+            name="adicional"
+            value="Gotas de Chocolate"
+            data-price="1.99"
+          />
+          <label for="ad-gotas">
+            <span>Gotas de Chocolate</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-ovomaltine"
+            name="adicional"
+            value="Ovomaltine"
+            data-price="1.99"
+          />
+          <label for="ad-ovomaltine">
+            <span>Ovomaltine</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-amendoim"
+            name="adicional"
+            value="Amendoim"
+            data-price="1.99"
+          />
+          <label for="ad-amendoim">
+            <span>Amendoim</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-confetti"
+            name="adicional"
+            value="Confetti"
+            data-price="1.99"
+          />
+          <label for="ad-confetti">
+            <span>Confetti</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-chocoboll"
+            name="adicional"
+            value="Chocoboll"
+            data-price="1.99"
+          />
+          <label for="ad-chocoboll">
+            <span>Chocoboll</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-granulado"
+            name="adicional"
+            value="Granulado"
+            data-price="1.99"
+          />
+          <label for="ad-granulado">
+            <span>Granulado</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-mel"
+            name="adicional"
+            value="Mel"
+            data-price="1.99"
+          />
+          <label for="ad-mel">
+            <span>Mel</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-sucrilhos"
+            name="adicional"
+            value="Sucrilhos"
+            data-price="1.99"
+          />
+          <label for="ad-sucrilhos">
+            <span>Sucrilhos</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-coco"
+            name="adicional"
+            value="Coco Ralado"
+            data-price="1.99"
+          />
+          <label for="ad-coco">
+            <span>Coco Ralado</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ad-banana"
+            name="adicional"
+            value="Banana"
+            data-price="1.99"
+          />
+          <label for="ad-banana">
+            <span>Banana</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="step-caldas">
+        <legend>Passo 4: Caldas (R$ 1,99 cada)</legend>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-morango"
+            name="calda"
+            value="Calda de Morango"
+            data-price="1.99"
+          />
+          <label for="ca-morango">
+            <span>Morango</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-chocolate"
+            name="calda"
+            value="Calda de Chocolate"
+            data-price="1.99"
+          />
+          <label for="ca-chocolate">
+            <span>Chocolate</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-groselha"
+            name="calda"
+            value="Groselha azul"
+            data-price="1.99"
+          />
+          <label for="ca-groselha">
+            <span>Groselha azul</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-maracuja"
+            name="calda"
+            value="Calda de Maracujá"
+            data-price="1.99"
+          />
+          <label for="ca-maracuja">
+            <span>Maracujá</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-docedeleite"
+            name="calda"
+            value="Calda de Doce de leite"
+            data-price="1.99"
+          />
+          <label for="ca-docedeleite">
+            <span>Doce de leite</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-tutti"
+            name="calda"
+            value="Tutti Frutti"
+            data-price="1.99"
+          />
+          <label for="ca-tutti">
+            <span>Tutti Frutti</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-caramelo"
+            name="calda"
+            value="Caramelo"
+            data-price="1.99"
+          />
+          <label for="ca-caramelo">
+            <span>Caramelo</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-limao"
+            name="calda"
+            value="Calda de Limão"
+            data-price="1.99"
+          />
+          <label for="ca-limao">
+            <span>Limão</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-menta"
+            name="calda"
+            value="Menta"
+            data-price="1.99"
+          />
+          <label for="ca-menta">
+            <span>Menta</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-uva"
+            name="calda"
+            value="Calda de Uva"
+            data-price="1.99"
+          />
+          <label for="ca-uva">
+            <span>Uva</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-abacaxi"
+            name="calda"
+            value="Calda de Abacaxi"
+            data-price="1.99"
+          />
+          <label for="ca-abacaxi">
+            <span>Abacaxi</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="ca-cafe"
+            name="calda"
+            value="Calda de Café"
+            data-price="1.99"
+          />
+          <label for="ca-cafe">
+            <span>Café</span>
+            <span class="preco-opcao">+R$ 1,99</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="step-premium">
+        <legend>Passo 5: Premium (R$ 4,99 cada)</legend>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-chocobranco"
+            name="premium"
+            value="Chocolate branco"
+            data-price="4.99"
+          />
+          <label for="pr-chocobranco">
+            <span>Chocolate branco</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-chocomeio"
+            name="premium"
+            value="Chocolate meio amargo"
+            data-price="4.99"
+          />
+          <label for="pr-chocomeio">
+            <span>Chocolate meio amargo</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-chocoaoleite"
+            name="premium"
+            value="Chocolate ao leite"
+            data-price="4.99"
+          />
+          <label for="pr-chocoaoleite">
+            <span>Chocolate ao leite</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-diamante"
+            name="premium"
+            value="Diamante Negro"
+            data-price="4.99"
+          />
+          <label for="pr-diamante">
+            <span>Diamante Negro</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-suflair"
+            name="premium"
+            value="Suflair"
+            data-price="4.99"
+          />
+          <label for="pr-suflair">
+            <span>Suflair</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-kitkat"
+            name="premium"
+            value="KitKat"
+            data-price="4.99"
+          />
+          <label for="pr-kitkat">
+            <span>KitKat</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-docedeleite"
+            name="premium"
+            value="Doce de leite (Premium)"
+            data-price="4.99"
+          />
+          <label for="pr-docedeleite">
+            <span>Doce de leite (Premium)</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-avela"
+            name="premium"
+            value="Creme de avelã"
+            data-price="4.99"
+          />
+          <label for="pr-avela">
+            <span>Creme de avelã</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-ninho"
+            name="premium"
+            value="Creme de ninho"
+            data-price="4.99"
+          />
+          <label for="pr-ninho">
+            <span>Creme de ninho</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-crememorango"
+            name="premium"
+            value="Creme de morango"
+            data-price="4.99"
+          />
+          <label for="pr-crememorango">
+            <span>Creme de morango</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-moussemaracuja"
+            name="premium"
+            value="Mousse de maracujá"
+            data-price="4.99"
+          />
+          <label for="pr-moussemaracuja">
+            <span>Mousse de maracujá</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-mousselimao"
+            name="premium"
+            value="Mousse de limão"
+            data-price="4.99"
+          />
+          <label for="pr-mousselimao">
+            <span>Mousse de limão</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+        <div class="opcao-item">
+          <input
+            type="checkbox"
+            id="pr-morango"
+            name="premium"
+            value="Morango (Fruta)"
+            data-price="4.99"
+          />
+          <label for="pr-morango">
+            <span>Morango (Fruta)</span>
+            <span class="preco-opcao">+R$ 4,99</span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="acai-modal-footer">
+      <div class="qtd-control">
+        <button class="menos">–</button>
+        <span class="qtd">1</span>
+        <button class="mais">+</button>
+      </div>
+
+      <button class="btn-add-carrinho">
+        Adicionar <span class="preco-total-modal">R$ 11,99</span>
+      </button>
+    </div>
+  </div>
+</div>
+    
+    <div id="modal-nome" class="modal-nome-backdrop">
+      <div class="modal-nome-content">
+        <img
+          src="img/acai-logo.png"
+          alt="Logo"
+          style="width: 80px; margin-bottom: 10px"
+        />
+        <h3>Seja bem-vindo!</h3>
+        <p>Para facilitar a entrega, por favor, nos diga seu primeiro nome:</p>
+        <input
+          type="text"
+          id="input-nome-cliente"
+          placeholder="Digite seu nome aqui..."
+        />
+        <button id="btn-confirmar-nome" class="btn-primario">Confirmar</button>
+      </div>
+    </div>
+    
+    <div id="modal-sucesso" class="modal-nome-backdrop" style="z-index: 10001">
+      <div class="modal-nome-content">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="100"
+          height="100"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#28a745"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="margin-bottom: 15px"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <h3 style="color: #28a745">Pedido Realizado!</h3>
+        <p>
+          Seu pedido foi enviado para a loja via WhatsApp. Obrigado pela
+          preferência!
+        </p>
+        <p style="font-size: 0.9em; color: #aaa; margin-top: 15px">
+          Recarregue a página para fazer um novo pedido.
+        </p>
+      </div>
+    </div>
+
+
+    <button id="btn-flutuante" class="btn-flutuante hidden">
+      🛒 <span id="count-itens">0</span> itens —
+      <span id="valor-itens">R$ 0,00</span>
+    </button>
+    
+    <button id="btnCarrinhoNovo" class="btn-carrinho-novo hidden">
+      🛒 <span id="novoCount">0</span> itens —
+      <span id="novoTotal">R$ 0,00</span>
+    </button>
+
+    <footer class="area-moderador">
+      <button id="btnModerador" class="btn-primario">🔐 Modo Moderador</button>
+      <button
+        id="btnGerenciarAdicionais"
+        class="btn-primario"
+        style="display: none"
+      >
+        ⚙️ Gerenciar Adicionais
+      </button>
+    </footer>
+
+    
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // ... (seu script de autocomplete do OpenStreetMap) ...
+      });
+
+async function calcularEntrega() {
+      const resultadoDiv = document.getElementById("resultadoEntrega");
+      const taxaInput = document.getElementById("taxa");
+      const endereco = document.getElementById("endereco").value.trim();
+
+      if (!endereco) {
+        resultadoDiv.innerHTML = "❗ Digite um endereço válido.";
+        return;
+      }
+      resultadoDiv.innerHTML = "⏳ Calculando...";
+
+      // --- 👇 COLE AS COORDENADAS DA SUA LOJA DE AÇAÍ AQUI 👇 ---
+      const lojaLat = -23.01594591882253; // **** SUBSTITUA PELA LATITUDE DA LOJA ****
+      const lojaLon = -45.5618155000205; // **** SUBSTITUA PELA LONGITUDE DA LOJA ****
+      // --- 👆 COLE AS COORDENADAS DA SUA LOJA DE AÇAÍ AQUI 👆 ---
+
+      try {
+        // 1: Endereço -> Coordenadas (Nominatim)
+        let busca = endereco + ", Taubaté, São Paulo"; // **** AJUSTE A CIDADE/ESTADO ****
+        
+        // ==========================================================
+        // 👇 A CORREÇÃO ESTÁ AQUI 👇
+        // ==========================================================
+        const urlNominatim = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(busca)}&countrycodes=br&limit=1`;
+        const respNominatim = await fetch(urlNominatim, { 
+          headers: { "User-Agent": "cardapio-acai-e-amor/1.0 (seu-email-aqui@gmail.com)" } // 👈 Mudei o User-Agent
+        }); 
+        // ==========================================================
+        
+        if (!respNominatim.ok) throw new Error(`Erro Nominatim ${respNominatim.status}`);
+        
+        const dataNominatim = await respNominatim.json();
+        if (!dataNominatim || dataNominatim.length === 0) {
+          resultadoDiv.innerHTML = "❌ Endereço não encontrado. Tente ser mais específico (Rua, Número, Bairro).";
+          return;
+        }
+        const clienteLat = dataNominatim[0].lat;
+        const clienteLon = dataNominatim[0].lon;
+        
+        // 2: Coordenadas -> Rota e Distância (OSRM)
+        const urlOSRM = `https://router.project-osrm.org/route/v1/driving/${lojaLon},${lojaLat};${clienteLon},${clienteLat}?overview=false`;
+        const respOSRM = await fetch(urlOSRM);
+        if (!respOSRM.ok) throw new Error(`Erro OSRM ${respOSRM.status}`);
+
+        const dataOSRM = await respOSRM.json();
+        if (dataOSRM.code !== "Ok" || !dataOSRM.routes || dataOSRM.routes.length === 0) {
+          console.error("Resposta OSRM inválida:", dataOSRM);
+          resultadoDiv.innerHTML = "❌ Não foi possível calcular a rota para este endereço.";
+          return;
+        }
+
+        const distancia_metros = dataOSRM.routes[0].distance;
+        const distancia_km = distancia_metros / 1000;
+        const distancia_formatada = distancia_km.toFixed(2);
+        const distanciaKmArredondada = Math.ceil(distancia_km);
+        
+        // =================================================================
+        // --- 👇 REGRAS DE TAXA E TEMPO DA LOJA (UNIFICADAS) 👇 ---
+        // =================================================================
+        
+        // --- 1. CONSTANTES (Declaradas UMA SÓ VEZ) ---
+        const limiteKmBase = 6;  // O limite de km para a taxa base (6km)
+        
+        // Constantes da TAXA
+        const taxaBase = 4.00;
+        const valorKmAdicional = 1.00;
+        
+        // Constantes do TEMPO
+        const tempoMinBase = 25;
+        const tempoMaxBase = 45;
+        const minutosPorKmAdicional = 5;
+
+        // --- 2. CÁLCULOS ---
+        let taxa = 0;
+        let tempoMinFinal = 0;
+        let tempoMaxFinal = 0;
+        let tempoEstimado = "";
+
+        if (distanciaKmArredondada <= limiteKmBase) {
+            // Se for ATÉ 6km
+            taxa = taxaBase;
+            tempoMinFinal = tempoMinBase;
+            tempoMaxFinal = tempoMaxBase;
+        } else {
+            // Se for ACIMA de 6km
+            const kmAdicionais = distanciaKmArredondada - limiteKmBase;
+            
+            // Calcula taxa
+            taxa = taxaBase + (kmAdicionais * valorKmAdicional);
+            
+            // Calcula tempo
+            const tempoExtra = kmAdicionais * minutosPorKmAdicional;
+            tempoMinFinal = tempoMinBase + tempoExtra;
+            tempoMaxFinal = tempoMaxBase + tempoExtra;
+        }
+
+        // Formata a string de tempo
+        tempoEstimado = `${tempoMinFinal} - ${tempoMaxFinal} min`;
+
+        // =================================================================
+        // --- 👆 FIM DAS REGRAS 👆 ---
+        // =================================================================
+
+        // Exibe o resultado
+        resultadoDiv.innerHTML = `
+          🏁 Distância: <b>${distancia_formatada} km</b><br>
+          🕒 Entrega estimada: <b>${tempoEstimado}</b><br>
+          💰 Taxa de entrega: <b>R$ ${taxa.toFixed(2).replace('.', ',')}</b>
+        `;
+        
+        // Atualiza o input escondido e o total no modal
+        taxaInput.value = taxa.toFixed(2);
+        
+        if (typeof atualizarTotalComTaxa === 'function') {
+          atualizarTotalComTaxa(); 
+        } else {
+          console.error("Função 'atualizarTotalComTaxa' não encontrada no escopo global.");
+        }
+
+      } catch (erro) {
+        console.error("Erro ao calcular entrega:", erro);
+        resultadoDiv.innerHTML = `⚠️ Erro ao calcular entrega. Tente novamente.`;
+      }
+    }
+    </script>
+
+    <script type="module" src="script.js"></script>
+    
+  </body>
+</html>

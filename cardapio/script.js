@@ -79,12 +79,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ... etc ...
 });
 
-
 // ==========================================================
 // IMPORTAÇÕES
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ==========================================================
 // CONFIGURAÇÃO FIREBASE (Do seu arquivo)
@@ -96,7 +100,7 @@ const firebaseConfig = {
   storageBucket: "geraldo-menu.firebasestorage.app",
   messagingSenderId: "1043431004683",
   appId: "1:1043431004683:web:f2405018f58b652d1bc50e",
-  measurementId: "G-PF3PRRRCRW"
+  measurementId: "G-PF3PRRRCRW",
 };
 
 // Inicializa Firebase
@@ -117,34 +121,65 @@ const sacola = []; // { name, price, obs }
 let produtoAtual = null;
 let precoBase = 0;
 let nomeCliente = "Cliente"; // Padrão
-let adicionaisPausados = JSON.parse(localStorage.getItem("adicionaisPausados") || "[]");
+let adicionaisPausados = JSON.parse(
+  localStorage.getItem("adicionaisPausados") || "[]"
+);
+window.taxaCalculada = false; // 👈 CORREÇÃO AQUI (let -> window.taxaCalculada)
 
 // ==========================================================
 // DECLARAÇÃO DE ELEMENTOS (Serão atribuídos no DOMContentLoaded)
 // ==========================================================
-let listaSacola, totalSacola, modal, modalClose, modalImg, modalTitle, modalDesc,
-  modalPrice, modalObs, modalAdd, inputRetirada, infoRetirada, revisao,
-  revisaoClose, btnRevisar, revisaoLista, revSubtotal, revTaxa, revTotal,
-  inputEndereco, inputTaxa, revisaoConfirmar, btnFlutuante, btnCarrinhoNovo,
-  btnModerador, btnGerenciarAdicionais, painelAdicionais, listaAdicionais,
-  popupTroco, resumoTroco, btnConfirmarTroco, modalNome, inputNome,
-  btnConfirmarNome, modalSucesso;
+let listaSacola,
+  totalSacola,
+  modal,
+  modalClose,
+  modalImg,
+  modalTitle,
+  modalDesc,
+  modalPrice,
+  modalObs,
+  modalAdd,
+  inputRetirada,
+  infoRetirada,
+  revisao,
+  revisaoClose,
+  btnRevisar,
+  revisaoLista,
+  revSubtotal,
+  revTaxa,
+  revTotal,
+  inputEndereco,
+  inputTaxa,
+  revisaoConfirmar,
+  btnFlutuante,
+  btnCarrinhoNovo,
+  btnModerador,
+  btnGerenciarAdicionais,
+  painelAdicionais,
+  listaAdicionais,
+  popupTroco,
+  resumoTroco,
+  btnConfirmarTroco,
+  modalNome,
+  inputNome,
+  btnConfirmarNome,
+  modalSucesso;
 // (btnFecharSucesso foi removido)
 
 // ==========================================================
 // FUNÇÕES AUXILIARES (Utils)
 // ==========================================================
 
-const brl = (n) => `R$ ${Number(n).toFixed(2).replace('.', ',')}`;
+const brl = (n) => `R$ ${Number(n).toFixed(2).replace(".", ",")}`;
 
 function updateModalState(isOpening) {
   document.body.classList.toggle("modal-open", isOpening);
   if (btnCarrinhoNovo) {
     if (isOpening) {
-      btnCarrinhoNovo.style.display = 'none';
+      btnCarrinhoNovo.style.display = "none";
     } else {
       // CORREÇÃO: Limpa o display para o CSS (classe .hidden) assumir
-      btnCarrinhoNovo.style.display = '';
+      btnCarrinhoNovo.style.display = "";
       atualizarCarrinhoNovo();
     }
   }
@@ -166,7 +201,9 @@ function showConfirmPopup() {
   popup.className = "confirm-popup";
   popup.textContent = "✅ Adicionado à sacola!";
   document.body.appendChild(popup);
-  setTimeout(() => { popup.classList.add("visible"); }, 10);
+  setTimeout(() => {
+    popup.classList.add("visible");
+  }, 10);
   setTimeout(() => {
     popup.classList.remove("visible");
     setTimeout(() => popup.remove(), 300);
@@ -211,13 +248,16 @@ function atualizarCarrinhoNovo() {
   const total = sacola.reduce((acc, it) => acc + it.price, 0);
 
   // Só mostra se tiver itens E nenhum modal estiver aberto
-  const modalAberto = (modal && modal.getAttribute('aria-hidden') === 'false') ||
-    (revisao && revisao.getAttribute('aria-hidden') === 'false') ||
-    (modalNome && modalNome.style.display === 'flex') ||
-    (modalSucesso && modalSucesso.style.display === 'flex') ||
+  const modalAberto =
+    (modal && modal.getAttribute("aria-hidden") === "false") ||
+    (revisao && revisao.getAttribute("aria-hidden") === "false") ||
+    (modalNome && modalNome.style.display === "flex") ||
+    (modalSucesso && modalSucesso.style.display === "flex") ||
     // Adicionamos a verificação do novo modal
-    (document.getElementById("modal-acai-builder") && document.getElementById("modal-acai-builder").classList.contains("aberto"));
-
+    (document.getElementById("modal-acai-builder") &&
+      document
+        .getElementById("modal-acai-builder")
+        .classList.contains("aberto"));
 
   if (qtd > 0 && !modalAberto) {
     btnCarrinhoNovo.classList.remove("hidden");
@@ -248,7 +288,11 @@ ${it.obs ? `<br/><small style="opacity:.8">obs: ${it.obs}</small>` : ""}
   totalSacola.innerHTML = `<strong>Total:</strong> ${brl(total)}`;
   atualizarBotaoFlutuante();
   atualizarCarrinhoNovo();
-  if (sacola.length === 0 && revisao && revisao.getAttribute("aria-hidden") === "false") {
+  if (
+    sacola.length === 0 &&
+    revisao &&
+    revisao.getAttribute("aria-hidden") === "false"
+  ) {
     fecharModal(revisao);
   }
 }
@@ -256,26 +300,35 @@ ${it.obs ? `<br/><small style="opacity:.8">obs: ${it.obs}</small>` : ""}
 // (Tornada global para ser acessível pelo script inline do index.html)
 window.atualizarTotalComTaxa = function () {
   if (!revSubtotal || !inputTaxa || !revTotal || !revTaxa) return;
-  const subtotal = parseFloat(revSubtotal.textContent.replace("R$", "").replace(",", ".").trim()) || 0;
+  const subtotal =
+    parseFloat(
+      revSubtotal.textContent.replace("R$", "").replace(",", ".").trim()
+    ) || 0;
   const taxa = parseFloat(inputTaxa.value) || 0;
   const total = subtotal + taxa;
   revTotal.innerText = brl(total);
   revTaxa.innerText = brl(taxa);
-}
+};
 
-function atualizarBotaoWhatsApp() {
+// SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
+window.atualizarBotaoWhatsApp = function () { // 👈 CORREÇÃO AQUI (function -> window.atualizarBotaoWhatsApp)
   if (!revisaoConfirmar || !inputEndereco) return;
   const tipoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
-  const tipo = tipoRadio ? tipoRadio.value : 'entrega';
-  const endereco = inputEndereco.value.trim();
+  const tipo = tipoRadio ? tipoRadio.value : "entrega";
+
+  let botaoDesabilitado = true; // Começa desabilitado por padrão
+
   if (tipo === "entrega") {
-    revisaoConfirmar.disabled = endereco.length === 0;
-    revisaoConfirmar.style.opacity = endereco.length === 0 ? 0.5 : 1;
+    // Para ENTREGA, o botão SÓ é habilitado se a taxa foi calculada.
+    botaoDesabilitado = !window.taxaCalculada; // 👈 CORREÇÃO AQUI (taxaCalculada -> window.taxaCalculada)
   } else {
-    revisaoConfirmar.disabled = false;
-    revisaoConfirmar.style.opacity = 1;
+    // Para RETIRADA, o botão está sempre habilitado.
+    botaoDesabilitado = false;
   }
-}
+
+  revisaoConfirmar.disabled = botaoDesabilitado;
+  revisaoConfirmar.style.opacity = botaoDesabilitado ? 0.5 : 1;
+};
 
 function preencherRevisao() {
   if (!revisaoLista || !revSubtotal) return;
@@ -296,11 +349,19 @@ ${it.obs ? `<br/><small style="opacity:.8">obs: ${it.obs}</small>` : ""}
   });
   revSubtotal.textContent = brl(subtotal);
   window.atualizarTotalComTaxa();
-  atualizarBotaoWhatsApp();
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
 }
 
 function abrirModalProduto(el) {
-  if (!modal || !modalImg || !modalTitle || !modalDesc || !modalObs || !modalPrice) return;
+  if (
+    !modal ||
+    !modalImg ||
+    !modalTitle ||
+    !modalDesc ||
+    !modalObs ||
+    !modalPrice
+  )
+    return;
   const name = el.dataset.name;
   const price = parseFloat(el.dataset.price);
   const desc = el.dataset.desc || "";
@@ -320,10 +381,10 @@ function abrirModalProduto(el) {
   function atualizarPrecoModal() {
     let total = precoBase;
     const extras = modal.querySelectorAll(".opcoes-modal .extra");
-    extras.forEach(ex => {
+    extras.forEach((ex) => {
       const input = ex.querySelector("input");
       const qtdEl = ex.querySelector(".qtd");
-      const qtd = qtdEl ? (parseInt(qtdEl.textContent) || 0) : 0;
+      const qtd = qtdEl ? parseInt(qtdEl.textContent) || 0 : 0;
       const extraValor = input ? parseFloat(input.dataset.extra || "0") : 0;
       total += qtd * extraValor;
     });
@@ -336,7 +397,7 @@ function abrirModalProduto(el) {
     clone.classList.remove("opcoes-produto");
     clone.classList.add("opcoes-modal");
     modalOpcoes.appendChild(clone);
-    clone.querySelectorAll(".qtd-control").forEach(ctrl => {
+    clone.querySelectorAll(".qtd-control").forEach((ctrl) => {
       const menos = ctrl.querySelector(".menos");
       const mais = ctrl.querySelector(".mais");
       const qtdEl = ctrl.querySelector(".qtd");
@@ -357,7 +418,7 @@ function abrirModalProduto(el) {
         });
       }
     });
-    clone.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    clone.querySelectorAll('input[type="checkbox"]').forEach((chk) => {
       chk.addEventListener("change", atualizarPrecoModal);
     });
   }
@@ -377,32 +438,55 @@ function gerarCodigoPedido(nome) {
   return `${prefixo}-${sufixo}`;
 }
 
+// SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
 async function enviarPedido() {
   if (!db) {
-    alert("Erro de conexão. Não é possível enviar o pedido. Tente recarregar a página.");
+    alert(
+      "Erro de conexão. Não é possível enviar o pedido. Tente recarregar a página."
+    );
     return;
   }
   const codigoPedido = gerarCodigoPedido(nomeCliente);
   if (sacola.length === 0) return alert("Sua sacola está vazia!");
 
-  atualizarBotaoWhatsApp();
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
   if (revisaoConfirmar && revisaoConfirmar.disabled) {
-    return alert("Por favor, preencha o endereço para entrega.");
+    // A mensagem de erro agora é genérica
+    return alert("Por favor, calcule a taxa de entrega ou selecione 'Retirada'.");
   }
+
+  // Coleta os dados (igual antes)
   const tipoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
-  const tipoEntrega = tipoRadio ? tipoRadio.value : 'entrega';
-  const endereco = tipoEntrega === 'retirada' ? "Retirada no local" : (inputEndereco ? inputEndereco.value.trim() : '');
+  const tipoEntrega = tipoRadio ? tipoRadio.value : "entrega";
+  const endereco =
+    tipoEntrega === "retirada"
+      ? "Retirada no local"
+      : inputEndereco
+      ? inputEndereco.value.trim()
+      : "";
   const taxa = inputTaxa ? parseFloat(inputTaxa.value || "0") : 0;
+
+  // 👇 LÓGICA DO COMPLEMENTO ADICIONADA AQUI 👇
+  const complementoInput = document.getElementById("complemento");
+  const complemento = complementoInput ? complementoInput.value.trim() : "";
+  let enderecoFinal = endereco; // Endereço base (Rua, N, Bairro)
+  if (complemento) {
+    enderecoFinal += `, ${complemento}`; // Endereço com o Apto/Bloco
+  }
+  // 👆 FIM DA ADIÇÃO 👆
+
   const subtotal = sacola.reduce((acc, it) => acc + it.price, 0);
   const totalFinal = subtotal + (isNaN(taxa) ? 0 : taxa);
   const pagRadio = document.querySelector('input[name="pagamento"]:checked');
-  const formaPagamento = pagRadio ? pagRadio.value : 'Cartão';
+  const formaPagamento = pagRadio ? pagRadio.value : "Cartão";
   let obsPagamento = "";
 
   if (formaPagamento === "Dinheiro") {
-    obsPagamento = resumoTroco ? resumoTroco.textContent.trim() : '';
+    obsPagamento = resumoTroco ? resumoTroco.textContent.trim() : "";
     if (!obsPagamento) {
-      return alert("Se o pagamento é em dinheiro, por favor, informe o valor para troco.");
+      return alert(
+        "Se o pagamento é em dinheiro, por favor, informe o valor para troco."
+      );
     }
   }
   const linhas = sacola.map((it) => {
@@ -413,7 +497,7 @@ async function enviarPedido() {
   const pedido = {
     codigo: codigoPedido,
     nomeCliente: nomeCliente,
-    endereco: endereco,
+    endereco: enderecoFinal, // 👈 USA O ENDEREÇO FINAL (com complemento)
     itens: sacola,
     subtotal,
     taxa,
@@ -446,12 +530,14 @@ async function enviarPedido() {
     `*--- NOVO PEDIDO (AÇAÍ & AMOR) ---*\n` +
     `*CÓDIGO DO PEDIDO: #${codigoPedido}*\n` +
     `*Cliente:* ${nomeCliente}\n\n${linhasMsg}\n\n` +
-    `Subtotal: ${brl(subtotal)}\nTaxa: ${brl(taxa)}\n*Total: ${brl(totalFinal)}*\n\n` +
+    `Subtotal: ${brl(subtotal)}\nTaxa: ${brl(taxa)}\n*Total: ${brl(
+      totalFinal
+    )}*\n\n` +
     `*Pagamento:* ${formaPagamento}\n` +
     (obsPagamento ? `*Troco:* ${obsPagamento}\n` : "") +
-    `*Entrega:* ${endereco}\n`;
+    `*Entrega:* ${enderecoFinal}\n`; // 👈 USA O ENDEREÇO FINAL (com complemento)
 
-  // **** TAREFA: MUDE O NÚMERO DO WHATSAPP DA LOJA ****
+  // **** NÚMERO DO WHATSAPP DA LOJA ****
   const numero = "5512991320722";
   const link = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
   window.open(link, "_blank");
@@ -479,7 +565,6 @@ async function enviarPedido() {
 
 function prepararCardsModerador() {
   document.querySelectorAll(".item").forEach((card) => {
-
     // VERIFICA SE ESTE É O CARD DO "MONTE SEU AÇAÍ"
     const isCardAcaiBuilder = card.querySelector(".btn-abrir-modal");
     if (isCardAcaiBuilder) {
@@ -489,10 +574,9 @@ function prepararCardsModerador() {
 
     // Se NÃO for o card do Açaí, adicione o listener antigo (das batatas)
     card.addEventListener("click", (e) => {
-
       // Verifica se o clique foi em um dos botões de "ação" que NÃO devem abrir o modal
-      const isBotaoPausar = e.target.closest('.btn-pausar');
-      const isBotaoQtd = e.target.closest('.qtd-control');
+      const isBotaoPausar = e.target.closest(".btn-pausar");
+      const isBotaoQtd = e.target.closest(".qtd-control");
 
       // Se o clique NÃO FOI no botão de pausar E NÃO FOI no controle de qtd...
       // ...então pode abrir o modal!
@@ -508,7 +592,7 @@ function initModerador() {
   const senhaModerador = "acai123"; // **** MUDE A SENHA DE ADMIN ****
   if (!btnModerador) return;
   let pausados = JSON.parse(localStorage.getItem("itensPausados") || "[]");
-  pausados.forEach(nome => {
+  pausados.forEach((nome) => {
     const item = document.querySelector(`.item[data-name="${nome}"]`);
     if (item) item.classList.add("pausado");
   });
@@ -532,7 +616,7 @@ function initModerador() {
       if (aviso) aviso.remove();
     }
     if (btnGerenciarAdicionais) {
-      btnGerenciarAdicionais.style.display = ativo ? 'inline-block' : 'none';
+      btnGerenciarAdicionais.style.display = ativo ? "inline-block" : "none";
     }
   });
 }
@@ -546,22 +630,24 @@ function atualizarEstadoExtras() {
 
   // VVV --- NOVA LÓGICA --- VVV
   // Procura todas as opções dentro do NOVO modal
-  const todosOpcoes = document.querySelectorAll('#modal-acai-builder .opcao-item');
+  const todosOpcoes = document.querySelectorAll(
+    "#modal-acai-builder .opcao-item"
+  );
 
-  todosOpcoes.forEach(opcao => {
-    const input = opcao.querySelector('input');
+  todosOpcoes.forEach((opcao) => {
+    const input = opcao.querySelector("input");
     if (!input) return;
 
     const nome = input.value; // Ex: "300ml" ou "Leite condensado"
-    
+
     // (A array 'adicionaisPausados' é a sua variável global que já existe)
     const isPausado = adicionaisPausados.includes(nome);
-    
+
     // Se estiver pausado, esconde o item do modal do cliente
     opcao.style.display = isPausado ? "none" : "flex";
-    
+
     // Adiciona a classe (para o CSS que já existe, se houver)
-    opcao.classList.toggle("pausado", isPausado); 
+    opcao.classList.toggle("pausado", isPausado);
   });
   // ^^^ --- FIM DA NOVA LÓGICA --- ^^^
 }
@@ -574,16 +660,20 @@ function abrirPainelAdicionais() {
 
   // VVV --- NOVA LÓGICA --- VVV
   // Procura todos os inputs (radio e checkbox) dentro do modal do açaí
-  const todosItens = document.querySelectorAll('#modal-acai-builder .opcao-item input');
-  
+  const todosItens = document.querySelectorAll(
+    "#modal-acai-builder .opcao-item input"
+  );
+
   // Usar um Map para garantir nomes únicos e guardar a label
   const nomesUnicos = new Map();
-  
-  todosItens.forEach(input => {
+
+  todosItens.forEach((input) => {
     const valor = input.value; // Ex: "300ml" (este é o ID que salvamos)
-    
+
     // Tenta pegar o texto da label para ser mais amigável
-    const labelSpan = input.closest('.opcao-item').querySelector('label span:first-child');
+    const labelSpan = input
+      .closest(".opcao-item")
+      .querySelector("label span:first-child");
     const nomeAmigavel = labelSpan ? labelSpan.textContent : valor; // Ex: "300ml" ou "Leite condensado"
 
     if (valor && !nomesUnicos.has(valor)) {
@@ -593,36 +683,43 @@ function abrirPainelAdicionais() {
   // ^^^ --- FIM DA NOVA LÓGICA --- ^^^
 
   listaAdicionais.innerHTML = ""; // Limpa a lista
-  
+
   // Ordena pelo nome amigável (A-Z)
-  const itensOrdenados = [...nomesUnicos.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const itensOrdenados = [...nomesUnicos.entries()].sort((a, b) =>
+    a[1].localeCompare(b[1])
+  );
 
   // Agora constrói o painel com os itens ordenados
-  itensOrdenados.forEach(([valor, nomeAmigavel]) => { // [valor, nomeAmigavel]
+  itensOrdenados.forEach(([valor, nomeAmigavel]) => {
+    // [valor, nomeAmigavel]
     const li = document.createElement("li");
-    li.style.cssText = "margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
-    
+    li.style.cssText =
+      "margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
+
     const span = document.createElement("span");
     span.textContent = nomeAmigavel; // Mostra "300ml"
-    
+
     const btn = document.createElement("button");
     const pausado = adicionaisPausados.includes(valor); // Checa por "300ml"
-    
+
     btn.textContent = pausado ? "▶️ Ativar" : "⏸️ Pausar";
     btn.className = "btn-primario";
     btn.style.background = pausado ? "#4CAF50" : "#ffc107";
     btn.style.color = pausado ? "#fff" : "#000";
-    btn.style.minWidth = '80px';
+    btn.style.minWidth = "80px";
 
     btn.addEventListener("click", () => {
       // Atualiza a lista de pausados
       adicionaisPausados = adicionaisPausados.includes(valor)
-                            ? adicionaisPausados.filter(n => n !== valor)
-                            : [...adicionaisPausados, valor];
-      
+        ? adicionaisPausados.filter((n) => n !== valor)
+        : [...adicionaisPausados, valor];
+
       // Salva no localStorage do navegador
-      localStorage.setItem("adicionaisPausados", JSON.stringify(adicionaisPausados));
-      
+      localStorage.setItem(
+        "adicionaisPausados",
+        JSON.stringify(adicionaisPausados)
+      );
+
       atualizarEstadoExtras(); // Atualiza a aparência no modal do cliente
       abrirPainelAdicionais(); // Reconstrói o painel para mostrar o novo status
     });
@@ -652,13 +749,11 @@ function initPainelAdicionais() {
   atualizarEstadoExtras();
 }
 
-
 // ===================================================================
 // ===== INICIALIZAÇÃO (AQUI FICA O DOMCONTENTLOADED) =====
 // ===================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-
   // --- 1. Atribui todos os elementos do DOM a variáveis ---
   listaSacola = document.getElementById("lista-sacola");
   totalSacola = document.getElementById("total-sacola");
@@ -700,30 +795,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // btnFecharSucesso foi removido, pois não existe mais
 
   // --- 2. Lógica de Inicialização (Pop-up de Nome) ---
-if (modalNome && inputNome && btnConfirmarNome) {
+  if (modalNome && inputNome && btnConfirmarNome) {
+    // REMOVEMOS a verificação do localStorage.
 
-  // REMOVEMOS a verificação do localStorage.
+    // Força o modal a aparecer TODA VEZ:
+    modalNome.style.display = "flex";
+    updateModalState(true); // Trava o scroll
 
-  // Força o modal a aparecer TODA VEZ:
-  modalNome.style.display = "flex";
-  updateModalState(true); // Trava o scroll
+    // O botão de confirmar agora SÓ fecha o modal, sem salvar.
+    btnConfirmarNome.addEventListener("click", () => {
+      const nomeDigitado = inputNome.value.trim();
+      if (nomeDigitado.length < 2) {
+        alert("Por favor, digite um nome válido.");
+        return;
+      }
+      // Define o nome apenas para esta sessão (não salva)
+      nomeCliente = nomeDigitado;
 
-  // O botão de confirmar agora SÓ fecha o modal, sem salvar.
-  btnConfirmarNome.addEventListener("click", () => {
-    const nomeDigitado = inputNome.value.trim();
-    if (nomeDigitado.length < 2) {
-      alert("Por favor, digite um nome válido.");
-      return;
-    }
-    // Define o nome apenas para esta sessão (não salva)
-    nomeCliente = nomeDigitado; 
+      // REMOVEMOS a linha que salvava no localStorage.
 
-    // REMOVEMOS a linha que salvava no localStorage.
-
-    modalNome.style.display = "none";
-    updateModalState(false); // Destrava o scroll
-  });
-}
+      modalNome.style.display = "none";
+      updateModalState(false); // Destrava o scroll
+    });
+  }
 
   // ==========================================================
   // --- 2.5. Lógica do Modal "Monte seu Açaí" (CÓDIGO NOVO) ---
@@ -761,23 +855,28 @@ if (modalNome && inputNome && btnConfirmarNome) {
     };
   }
 
-
   // ==========================================================
   // --- 2.6. LÓGICA INTERNA DO MODAL AÇAÍ (CÁLCULOS) ---
   // ==========================================================
-  
+
   // Seleciona todos os elementos DENTRO do modal do açaí
   const precoTotalEl = modalAcaiBuilder.querySelector(".preco-total-modal");
   const btnAddAcai = modalAcaiBuilder.querySelector(".btn-add-carrinho");
   const allInputs = modalAcaiBuilder.querySelectorAll(
     'input[type="radio"], input[type="checkbox"]'
   );
-  const qtdElAcai = modalAcaiBuilder.querySelector(".acai-modal-footer .qtd");
-  const btnMenosAcai = modalAcaiBuilder.querySelector(".acai-modal-footer .menos");
-  const btnMaisAcai = modalAcaiBuilder.querySelector(".acai-modal-footer .mais");
+  const qtdElAcai = modalAcaiBuilder.querySelector(
+    ".acai-modal-footer .qtd"
+  );
+  const btnMenosAcai = modalAcaiBuilder.querySelector(
+    ".acai-modal-footer .menos"
+  );
+  const btnMaisAcai = modalAcaiBuilder.querySelector(
+    ".acai-modal-footer .mais"
+  );
 
   /**
-  /**
+   /**
    * Calcula o preço total do açaí montado e atualiza o rodapé do modal.
    */
   function calcularPrecoAcai() {
@@ -797,7 +896,8 @@ if (modalNome && inputNome && btnConfirmarNome) {
     const basesChecked = modalAcaiBuilder.querySelectorAll(
       'input[name="base_selecao"]:checked' // 👈 Seletor atualizado
     );
-    basesChecked.forEach((input) => { // 👈 Loop atualizado
+    basesChecked.forEach((input) => {
+      // 👈 Loop atualizado
       precoUnitario += parseFloat(input.dataset.price || 0);
     });
 
@@ -838,7 +938,7 @@ if (modalNome && inputNome && btnConfirmarNome) {
   }
 
   /**
-  /**
+   /**
    * Reseta o modal do açaí para o estado padrão.
    */
   function resetarModalAcai() {
@@ -858,7 +958,7 @@ if (modalNome && inputNome && btnConfirmarNome) {
     // (LÓGICA ATUALIZADA)
     // Reseta a base padrão (Marca Açaí)
     const defaultBase = modalAcaiBuilder.querySelector(
-      'input#b-acai' // 👈 Seletor atualizado
+      "input#b-acai" // 👈 Seletor atualizado
     );
     if (defaultBase) defaultBase.checked = true;
 
@@ -893,9 +993,8 @@ if (modalNome && inputNome && btnConfirmarNome) {
     calcularPrecoAcai(); // Recalcula o preço
   });
 
-// 4. Controla o botão "Adicionar"
+  // 4. Controla o botão "Adicionar"
   btnAddAcai.addEventListener("click", () => {
-
     // ==========================================================
     // 👇 VALIDAÇÃO OBRIGATÓRIA (CÓDIGO NOVO) 👇
     // ==========================================================
@@ -913,7 +1012,6 @@ if (modalNome && inputNome && btnConfirmarNome) {
     // ==========================================================
     // FIM DA VALIDAÇÃO
     // ==========================================================
-
 
     // Pega todos os nomes dos itens selecionados
     const nomeAdicionais = [];
@@ -967,14 +1065,12 @@ if (modalNome && inputNome && btnConfirmarNome) {
   // ==========================================================
   // --- FIM DO CÓDIGO NOVO ---
 
-
   // --- 3. Adiciona TODOS os Event Listeners ---
 
   // (Listener do btnFecharSucesso foi removido)
 
- // Abrir modal ao clicar no card (LÓGICA CORRIGIDA E UNIFICADA)
+  // Abrir modal ao clicar no card (LÓGICA CORRIGIDA E UNIFICADA)
   document.querySelectorAll(".item").forEach((card) => {
-    
     // VERIFICA SE ESTE É O CARD DO "MONTE SEU AÇAÍ"
     const isCardAcaiBuilder = card.querySelector(".btn-abrir-modal");
 
@@ -982,18 +1078,17 @@ if (modalNome && inputNome && btnConfirmarNome) {
       // ✅ Se for o card do Açaí, o card INTEIRO abre o modal do açaí
       card.addEventListener("click", (e) => {
         // Exceção: não abrir se clicar no botão de pausar (admin)
-        const isBotaoPausar = e.target.closest('.btn-pausar');
+        const isBotaoPausar = e.target.closest(".btn-pausar");
         if (!isBotaoPausar) {
           abrirModalAcai(); // 👈 CHAMA A FUNÇÃO DO MODAL AÇAÍ
         }
       });
-
     } else {
       // ❌ Se NÃO for o card do Açaí, adicione o listener antigo (das batatas)
       card.addEventListener("click", (e) => {
         // Verifica se o clique foi em um dos botões que NÃO devem abrir o modal
-        const isBotaoPausar = e.target.closest('.btn-pausar');
-        const isBotaoQtd = e.target.closest('.qtd-control');
+        const isBotaoPausar = e.target.closest(".btn-pausar");
+        const isBotaoQtd = e.target.closest(".qtd-control");
 
         if (!isBotaoPausar && !isBotaoQtd) {
           abrirModalProduto(card); // 👈 CHAMA A FUNÇÃO DO MODAL ANTIGO
@@ -1002,66 +1097,89 @@ if (modalNome && inputNome && btnConfirmarNome) {
     }
   });
 
-  if (modalClose) modalClose.addEventListener("click", () => fecharModal(modal));
-  if (revisaoClose) revisaoClose.addEventListener("click", () => fecharModal(revisao));
-  if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) fecharModal(modal); });
-  if (revisao) revisao.addEventListener("click", (e) => { if (e.target === revisao) fecharModal(revisao); });
-
-  if (modalAdd) modalAdd.addEventListener("click", () => {
-    if (!produtoAtual) return;
-    const obs = modalObs.value.trim();
-    let adicionaisSelecionados = [];
-    let extraTotal = 0;
-    const extras = modal.querySelectorAll(".opcoes-modal .extra");
-    extras.forEach(ex => {
-      const input = ex.querySelector("input");
-      const qtdEl = ex.querySelector(".qtd");
-      const qtd = qtdEl ? (parseInt(qtdEl.textContent) || 0) : 0;
-      if (qtd > 0) {
-        const valorExtra = input ? parseFloat(input.dataset.extra || "0") : 0;
-        adicionaisSelecionados.push(`${qtd}x ${input ? input.value : 'Adicional'}`);
-        extraTotal += qtd * valorExtra;
-      }
+  if (modalClose)
+    modalClose.addEventListener("click", () => fecharModal(modal));
+  if (revisaoClose)
+    revisaoClose.addEventListener("click", () => fecharModal(revisao));
+  if (modal)
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) fecharModal(modal);
     });
-    const finalPrice = precoBase + extraTotal;
-    sacola.push({
-      name: produtoAtual.dataset.name + (adicionaisSelecionados.length ? ` (+ ${adicionaisSelecionados.join(", ")})` : ""),
-      price: finalPrice,
-      obs: obs || null
+  if (revisao)
+    revisao.addEventListener("click", (e) => {
+      if (e.target === revisao) fecharModal(revisao);
     });
-    atualizarSacola();
-    showConfirmPopup();
-    fecharModal(modal);
-  });
 
-  if (listaSacola) listaSacola.addEventListener("click", (e) => {
-    const btn = e.target.closest(".btn-remove");
-    if (!btn) return;
-    const idx = Number(btn.dataset.idx);
-    sacola.splice(idx, 1);
-    atualizarSacola();
-    if (revisao && revisao.getAttribute("aria-hidden") === "false") preencherRevisao();
-  });
+  if (modalAdd)
+    modalAdd.addEventListener("click", () => {
+      if (!produtoAtual) return;
+      const obs = modalObs.value.trim();
+      let adicionaisSelecionados = [];
+      let extraTotal = 0;
+      const extras = modal.querySelectorAll(".opcoes-modal .extra");
+      extras.forEach((ex) => {
+        const input = ex.querySelector("input");
+        const qtdEl = ex.querySelector(".qtd");
+        const qtd = qtdEl ? parseInt(qtdEl.textContent) || 0 : 0;
+        if (qtd > 0) {
+          const valorExtra = input
+            ? parseFloat(input.dataset.extra || "0")
+            : 0;
+          adicionaisSelecionados.push(
+            `${qtd}x ${input ? input.value : "Adicional"}`
+          );
+          extraTotal += qtd * valorExtra;
+        }
+      });
+      const finalPrice = precoBase + extraTotal;
+      sacola.push({
+        name:
+          produtoAtual.dataset.name +
+          (adicionaisSelecionados.length
+            ? ` (+ ${adicionaisSelecionados.join(", ")})`
+            : ""),
+        price: finalPrice,
+        obs: obs || null,
+      });
+      atualizarSacola();
+      showConfirmPopup();
+      fecharModal(modal);
+    });
 
-  if (btnRevisar) btnRevisar.addEventListener("click", () => {
-    if (sacola.length === 0) return alert("Sua sacola está vazia!");
-    preencherRevisao();
-    if (revisao) revisao.setAttribute("aria-hidden", "false");
-    updateModalState(true);
-  });
+  if (listaSacola)
+    listaSacola.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-remove");
+      if (!btn) return;
+      const idx = Number(btn.dataset.idx);
+      sacola.splice(idx, 1);
+      atualizarSacola();
+      if (revisao && revisao.getAttribute("aria-hidden") === "false")
+        preencherRevisao();
+    });
 
-  if (revisaoLista) revisaoLista.addEventListener("click", (e) => {
-    const btn = e.target.closest(".btn-remove");
-    if (!btn) return;
-    const idx = Number(btn.dataset.idx);
-    sacola.splice(idx, 1);
-    atualizarSacola();
-    if (sacola.length === 0) fecharModal(revisao);
-    else preencherRevisao();
-  });
+  if (btnRevisar)
+    btnRevisar.addEventListener("click", () => {
+      if (sacola.length === 0) return alert("Sua sacola está vazia!");
+      preencherRevisao();
+      if (revisao) revisao.setAttribute("aria-hidden", "false");
+      updateModalState(true);
+    });
 
-  if (inputTaxa) inputTaxa.addEventListener("input", window.atualizarTotalComTaxa);
-  if (revisaoConfirmar) revisaoConfirmar.addEventListener("click", enviarPedido);
+  if (revisaoLista)
+    revisaoLista.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-remove");
+      if (!btn) return;
+      const idx = Number(btn.dataset.idx);
+      sacola.splice(idx, 1);
+      atualizarSacola();
+      if (sacola.length === 0) fecharModal(revisao);
+      else preencherRevisao();
+    });
+
+  if (inputTaxa)
+    inputTaxa.addEventListener("input", window.atualizarTotalComTaxa);
+  if (revisaoConfirmar)
+    revisaoConfirmar.addEventListener("click", enviarPedido);
 
   const header = document.querySelector(".brand-header");
   if (header) {
@@ -1070,40 +1188,67 @@ if (modalNome && inputNome && btnConfirmarNome) {
     });
   }
 
-  if (btnCarrinhoNovo) btnCarrinhoNovo.addEventListener("click", () => {
-    if (sacola.length === 0) return;
-    preencherRevisao();
-    if (revisao) revisao.setAttribute("aria-hidden", "false");
-    updateModalState(true);
-  });
+  if (btnCarrinhoNovo)
+    btnCarrinhoNovo.addEventListener("click", () => {
+      if (sacola.length === 0) return;
+      preencherRevisao();
+      if (revisao) revisao.setAttribute("aria-hidden", "false");
+      updateModalState(true);
+    });
 
-  document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
+  // 👇 ADICIONE ESTE BLOCO NOVO AQUI 👇
+  if (inputEndereco) {
+    inputEndereco.addEventListener("input", () => {
+      // Se o cliente digitar no campo de endereço DEPOIS de ter calculado a taxa
+      if (window.taxaCalculada) { // 👈 CORREÇÃO AQUI (taxaCalculada -> window.taxaCalculada)
+        window.taxaCalculada = false; // "Sujou" o cálculo, precisa recalcular
+        window.atualizarBotaoWhatsApp(); // Trava o botão de novo
+      }
+    });
+  }
+  // 👆 FIM DA ADIÇÃO 👆
+
+  document.querySelectorAll('input[name="tipoEntrega"]').forEach((radio) => {
     radio.addEventListener("change", () => {
-      const tipoSelecionadoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
-      const tipoSelecionado = tipoSelecionadoRadio ? tipoSelecionadoRadio.value : 'entrega';
+      const tipoSelecionadoRadio = document.querySelector(
+        'input[name="tipoEntrega"]:checked'
+      );
+      const tipoSelecionado = tipoSelecionadoRadio
+        ? tipoSelecionadoRadio.value
+        : "entrega";
       const campoEndereco = document.getElementById("campoEndereco");
       const infoRetirada = document.getElementById("infoRetirada");
       const resultadoEntrega = document.getElementById("resultadoEntrega");
 
-      if (campoEndereco && infoRetirada && inputTaxa && inputEndereco && resultadoEntrega) {
+      if (
+        campoEndereco &&
+        infoRetirada &&
+        inputTaxa &&
+        inputEndereco &&
+        resultadoEntrega
+      ) {
         if (tipoSelecionado === "retirada") {
           campoEndereco.style.display = "none";
           infoRetirada.style.display = "block";
           inputTaxa.value = "0.00";
           inputEndereco.disabled = true;
-          resultadoEntrega.innerHTML = "ℹ️ Retirada no local selecionada. Sem taxa de entrega.";
+          resultadoEntrega.innerHTML =
+            "ℹ️ Retirada no local selecionada. Sem taxa de entrega.";
+          window.taxaCalculada = true; // ✅ ADICIONE AQUI (Retirada é um estado "calculado" válido)
         } else {
           campoEndereco.style.display = "block";
           infoRetirada.style.display = "none";
           inputEndereco.disabled = false;
+
+          window.taxaCalculada = false; // ❌ ADICIONE AQUI (Trocou para entrega, força o recalculo)
         }
         window.atualizarTotalComTaxa();
-        atualizarBotaoWhatsApp();
+        window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
       }
     });
   });
 
-  document.querySelectorAll('input[name="pagamento"]').forEach(radio => {
+  document.querySelectorAll('input[name="pagamento"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       const valorInput = document.getElementById("valorTroco");
       if (popupTroco && valorInput && resumoTroco) {
@@ -1121,23 +1266,32 @@ if (modalNome && inputNome && btnConfirmarNome) {
     });
   });
 
-  if (btnConfirmarTroco) btnConfirmarTroco.addEventListener("click", () => {
-    const valorInput = document.getElementById("valorTroco");
-    const revTotalEl = document.getElementById("revTotal");
-    if (valorInput && revTotalEl && resumoTroco && popupTroco) {
-      const valor = parseFloat(valorInput.value);
-      const totalPedido = parseFloat(revTotalEl.textContent.replace("R$", "").replace(",", ".").trim());
-      if (isNaN(valor) || valor <= 0) return alert("Por favor, insira um valor válido.");
-      if (valor < totalPedido) return alert("O valor para troco deve ser maior ou igual ao total do pedido.");
-      resumoTroco.textContent = `Troco para R$ ${valor.toFixed(2).replace('.', ',')}`;
-      resumoTroco.style.display = "block";
-      valorInput.blur();
-      popupTroco.style.display = "none";
-      popupTroco.setAttribute("aria-hidden", "true");
-    }
-  });
+  if (btnConfirmarTroco)
+    btnConfirmarTroco.addEventListener("click", () => {
+      const valorInput = document.getElementById("valorTroco");
+      const revTotalEl = document.getElementById("revTotal");
+      if (valorInput && revTotalEl && resumoTroco && popupTroco) {
+        const valor = parseFloat(valorInput.value);
+        const totalPedido = parseFloat(
+          revTotalEl.textContent.replace("R$", "").replace(",", ".").trim()
+        );
+        if (isNaN(valor) || valor <= 0)
+          return alert("Por favor, insira um valor válido.");
+        if (valor < totalPedido)
+          return alert(
+            "O valor para troco deve ser maior ou igual ao total do pedido."
+          );
+        resumoTroco.textContent = `Troco para R$ ${valor
+          .toFixed(2)
+          .replace(".", ",")}`;
+        resumoTroco.style.display = "block";
+        valorInput.blur();
+        popupTroco.style.display = "none";
+        popupTroco.setAttribute("aria-hidden", "true");
+      }
+    });
 
-  if (inputEndereco) inputEndereco.addEventListener("input", atualizarBotaoWhatsApp);
+  // if (inputEndereco) inputEndereco.addEventListener("input", atualizarBotaoWhatsApp); // <-- LINHA REMOVIDA (DUPLICADA)
 
   // --- 4. Inicializa os Módulos Admin ---
   initModerador();
@@ -1145,14 +1299,16 @@ if (modalNome && inputNome && btnConfirmarNome) {
 
   // --- 5. Força Estado Inicial ---
   atualizarSacola();
-  atualizarBotaoWhatsApp();
-  const tipoInicialRadio = document.querySelector('input[name="tipoEntrega"]:checked');
-  const tipoInicial = tipoInicialRadio ? tipoInicialRadio.value : 'entrega';
-  if (inputEndereco) inputEndereco.disabled = (tipoInicial === 'retirada');
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
+  const tipoInicialRadio = document.querySelector(
+    'input[name="tipoEntrega"]:checked'
+  );
+  const tipoInicial = tipoInicialRadio ? tipoInicialRadio.value : "entrega";
+  if (inputEndereco) inputEndereco.disabled = tipoInicial === "retirada";
   const campoEnderecoEl = document.getElementById("campoEndereco");
   const infoRetiradaEl = document.getElementById("infoRetirada");
   if (campoEnderecoEl && infoRetiradaEl) {
-    if (tipoInicial === 'retirada') {
+    if (tipoInicial === "retirada") {
       campoEnderecoEl.style.display = "none";
       infoRetiradaEl.style.display = "block";
     } else {

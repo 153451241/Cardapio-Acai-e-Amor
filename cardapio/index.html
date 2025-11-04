@@ -229,7 +229,7 @@
             Entrega
           </label>
 
-          <div id="campoEndereco" style="margin-top: 10px">
+<div id="campoEndereco" style="margin-top: 10px;">
             <label for="endereco">Endereço</label>
             <input
               id="endereco"
@@ -238,6 +238,14 @@
               autocomplete="off"
             />
             <ul id="sugestoes"></ul>
+
+            <label for="complemento" style="margin-top: 10px; display: block;">Complemento (Apto / Bloco / Casa)</label>
+            <input 
+              id="complemento" 
+              type="text" 
+              placeholder="Ex: Apto 101, Bloco 5" 
+              style="width: 100%;" 
+            />
             <button
               id="btnCalcularEntrega"
               class="btn-primario"
@@ -1098,131 +1106,125 @@
       });
 
 async function calcularEntrega() {
-      const resultadoDiv = document.getElementById("resultadoEntrega");
-      const taxaInput = document.getElementById("taxa");
-      const endereco = document.getElementById("endereco").value.trim();
+        const resultadoDiv = document.getElementById("resultadoEntrega");
+        const taxaInput = document.getElementById("taxa");
+        const endereco = document.getElementById("endereco").value.trim();
 
-      if (!endereco) {
-        resultadoDiv.innerHTML = "❗ Digite um endereço válido.";
-        return;
-      }
-      resultadoDiv.innerHTML = "⏳ Calculando...";
-
-      // --- 👇 COLE AS COORDENADAS DA SUA LOJA DE AÇAÍ AQUI 👇 ---
-      const lojaLat = -23.01594591882253; // **** SUBSTITUA PELA LATITUDE DA LOJA ****
-      const lojaLon = -45.5618155000205; // **** SUBSTITUA PELA LONGITUDE DA LOJA ****
-      // --- 👆 COLE AS COORDENADAS DA SUA LOJA DE AÇAÍ AQUI 👆 ---
-
-      try {
-        // 1: Endereço -> Coordenadas (Nominatim)
-        let busca = endereco + ", Taubaté, São Paulo"; // **** AJUSTE A CIDADE/ESTADO ****
-        
-        // ==========================================================
-        // 👇 A CORREÇÃO ESTÁ AQUI 👇
-        // ==========================================================
-        const urlNominatim = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(busca)}&countrycodes=br&limit=1`;
-        const respNominatim = await fetch(urlNominatim, { 
-          headers: { "User-Agent": "cardapio-acai-e-amor/1.0 (seu-email-aqui@gmail.com)" } // 👈 Mudei o User-Agent
-        }); 
-        // ==========================================================
-        
-        if (!respNominatim.ok) throw new Error(`Erro Nominatim ${respNominatim.status}`);
-        
-        const dataNominatim = await respNominatim.json();
-        if (!dataNominatim || dataNominatim.length === 0) {
-          resultadoDiv.innerHTML = "❌ Endereço não encontrado. Tente ser mais específico (Rua, Número, Bairro).";
+        if (!endereco) {
+          resultadoDiv.innerHTML = "❗ Digite um endereço válido.";
           return;
         }
-        const clienteLat = dataNominatim[0].lat;
-        const clienteLon = dataNominatim[0].lon;
-        
-        // 2: Coordenadas -> Rota e Distância (OSRM)
-        const urlOSRM = `https://router.project-osrm.org/route/v1/driving/${lojaLon},${lojaLat};${clienteLon},${clienteLat}?overview=false`;
-        const respOSRM = await fetch(urlOSRM);
-        if (!respOSRM.ok) throw new Error(`Erro OSRM ${respOSRM.status}`);
+        resultadoDiv.innerHTML = "⏳ Calculando...";
 
-        const dataOSRM = await respOSRM.json();
-        if (dataOSRM.code !== "Ok" || !dataOSRM.routes || dataOSRM.routes.length === 0) {
-          console.error("Resposta OSRM inválida:", dataOSRM);
-          resultadoDiv.innerHTML = "❌ Não foi possível calcular a rota para este endereço.";
-          return;
-        }
+        // --- 👇 COORDENADAS DA LOJA 👇 ---
+        const lojaLat = -23.01594591882253; 
+        const lojaLon = -45.5618155000205; 
+        // --- 👆 COORDENADAS DA LOJA 👆 ---
 
-        const distancia_metros = dataOSRM.routes[0].distance;
-        const distancia_km = distancia_metros / 1000;
-        const distancia_formatada = distancia_km.toFixed(2);
-        const distanciaKmArredondada = Math.ceil(distancia_km);
-        
-        // =================================================================
-        // --- 👇 REGRAS DE TAXA E TEMPO DA LOJA (UNIFICADAS) 👇 ---
-        // =================================================================
-        
-        // --- 1. CONSTANTES (Declaradas UMA SÓ VEZ) ---
-        const limiteKmBase = 6;  // O limite de km para a taxa base (6km)
-        
-        // Constantes da TAXA
-        const taxaBase = 4.00;
-        const valorKmAdicional = 1.00;
-        
-        // Constantes do TEMPO
-        const tempoMinBase = 25;
-        const tempoMaxBase = 45;
-        const minutosPorKmAdicional = 5;
-
-        // --- 2. CÁLCULOS ---
-        let taxa = 0;
-        let tempoMinFinal = 0;
-        let tempoMaxFinal = 0;
-        let tempoEstimado = "";
-
-        if (distanciaKmArredondada <= limiteKmBase) {
-            // Se for ATÉ 6km
-            taxa = taxaBase;
-            tempoMinFinal = tempoMinBase;
-            tempoMaxFinal = tempoMaxBase;
-        } else {
-            // Se for ACIMA de 6km
-            const kmAdicionais = distanciaKmArredondada - limiteKmBase;
+        try {
+          // 1: Endereço -> Coordenadas (Nominatim)
+          let busca = endereco + ", Taubaté, São Paulo"; 
+          
+          const urlNominatim = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(busca)}&countrycodes=br&limit=1`;
+          const respNominatim = await fetch(urlNominatim, { 
+            headers: { "User-Agent": "cardapio-acai-e-amor/1.0 (seu-email-aqui@gmail.com)" } 
+          }); 
+          
+          if (!respNominatim.ok) throw new Error(`Erro Nominatim ${respNominatim.status}`);
+          
+          const dataNominatim = await respNominatim.json();
+          if (!dataNominatim || dataNominatim.length === 0) {
+            resultadoDiv.innerHTML = "❌ Endereço não encontrado. Tente ser mais específico (Rua, Número, Bairro).";
             
-            // Calcula taxa
-            taxa = taxaBase + (kmAdicionais * valorKmAdicional);
+            // 👇 ADIÇÃO DE TRAVA (SE DER ERRO) 👇
+            taxaCalculada = false; 
+            atualizarBotaoWhatsApp();
+            // 👆 FIM DA ADIÇÃO 👆
             
-            // Calcula tempo
-            const tempoExtra = kmAdicionais * minutosPorKmAdicional;
-            tempoMinFinal = tempoMinBase + tempoExtra;
-            tempoMaxFinal = tempoMaxBase + tempoExtra;
+            return;
+          }
+          const clienteLat = dataNominatim[0].lat;
+          const clienteLon = dataNominatim[0].lon;
+          
+          // 2: Coordenadas -> Rota e Distância (OSRM)
+          const urlOSRM = `https://router.project-osrm.org/route/v1/driving/${lojaLon},${lojaLat};${clienteLon},${clienteLat}?overview=false`;
+          const respOSRM = await fetch(urlOSRM);
+          if (!respOSRM.ok) throw new Error(`Erro OSRM ${respOSRM.status}`);
+
+          const dataOSRM = await respOSRM.json();
+          if (dataOSRM.code !== "Ok" || !dataOSRM.routes || dataOSRM.routes.length === 0) {
+            console.error("Resposta OSRM inválida:", dataOSRM);
+            resultadoDiv.innerHTML = "❌ Não foi possível calcular a rota para este endereço.";
+            
+            // 👇 ADIÇÃO DE TRAVA (SE DER ERRO) 👇
+            taxaCalculada = false;
+            atualizarBotaoWhatsApp();
+            // 👆 FIM DA ADIÇÃO 👆
+            
+            return;
+          }
+
+          const distancia_metros = dataOSRM.routes[0].distance;
+          const distancia_km = distancia_metros / 1000;
+          const distancia_formatada = distancia_km.toFixed(2);
+          const distanciaKmArredondada = Math.ceil(distancia_km);
+          
+          // ... (Suas regras de taxa e tempo) ...
+          const limiteKmBase = 6;
+          const taxaBase = 4.00;
+          const valorKmAdicional = 1.00;
+          const tempoMinBase = 25;
+          const tempoMaxBase = 45;
+          const minutosPorKmAdicional = 5;
+
+          let taxa = 0;
+          let tempoMinFinal = 0;
+          let tempoMaxFinal = 0;
+          let tempoEstimado = "";
+
+          if (distanciaKmArredondada <= limiteKmBase) {
+              taxa = taxaBase;
+              tempoMinFinal = tempoMinBase;
+              tempoMaxFinal = tempoMaxBase;
+          } else {
+              const kmAdicionais = distanciaKmArredondada - limiteKmBase;
+              taxa = taxaBase + (kmAdicionais * valorKmAdicional);
+              const tempoExtra = kmAdicionais * minutosPorKmAdicional;
+              tempoMinFinal = tempoMinBase + tempoExtra;
+              tempoMaxFinal = tempoMaxBase + tempoExtra;
+          }
+          tempoEstimado = `${tempoMinFinal} - ${tempoMaxFinal} min`;
+          // ... (Fim das regras) ...
+
+          // Exibe o resultado
+          resultadoDiv.innerHTML = `
+            🏁 Distância: <b>${distancia_formatada} km</b><br>
+            🕒 Entrega estimada: <b>${tempoEstimado}</b><br>
+            💰 Taxa de entrega: <b>R$ ${taxa.toFixed(2).replace('.', ',')}</b>
+          `;
+          
+          taxaInput.value = taxa.toFixed(2);
+          
+          // 👇 ADIÇÃO DA TRAVA (DEU SUCESSO) 👇
+          taxaCalculada = true; // A "trava" foi destrancada
+          atualizarBotaoWhatsApp(); // Atualiza o botão AGORA
+          // 👆 FIM DA ADIÇÃO 👆
+          
+          if (typeof atualizarTotalComTaxa === 'function') {
+            atualizarTotalComTaxa(); 
+          }
+
+        } catch (erro) {
+          console.error("Erro ao calcular entrega:", erro);
+          resultadoDiv.innerHTML = `⚠️ Erro ao calcular entrega. Tente novamente.`;
+          
+          // 👇 ADIÇÃO DE TRAVA (SE DER ERRO) 👇
+          taxaCalculada = false;
+          atualizarBotaoWhatsApp();
+          // 👆 FIM DA ADIÇÃO 👆
         }
-
-        // Formata a string de tempo
-        tempoEstimado = `${tempoMinFinal} - ${tempoMaxFinal} min`;
-
-        // =================================================================
-        // --- 👆 FIM DAS REGRAS 👆 ---
-        // =================================================================
-
-        // Exibe o resultado
-        resultadoDiv.innerHTML = `
-          🏁 Distância: <b>${distancia_formatada} km</b><br>
-          🕒 Entrega estimada: <b>${tempoEstimado}</b><br>
-          💰 Taxa de entrega: <b>R$ ${taxa.toFixed(2).replace('.', ',')}</b>
-        `;
-        
-        // Atualiza o input escondido e o total no modal
-        taxaInput.value = taxa.toFixed(2);
-        
-        if (typeof atualizarTotalComTaxa === 'function') {
-          atualizarTotalComTaxa(); 
-        } else {
-          console.error("Função 'atualizarTotalComTaxa' não encontrada no escopo global.");
-        }
-
-      } catch (erro) {
-        console.error("Erro ao calcular entrega:", erro);
-        resultadoDiv.innerHTML = `⚠️ Erro ao calcular entrega. Tente novamente.`;
       }
-    }
     </script>
-
     <script type="module" src="script.js"></script>
     
   </body>

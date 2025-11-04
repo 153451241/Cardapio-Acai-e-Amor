@@ -124,7 +124,7 @@ let nomeCliente = "Cliente"; // Padrão
 let adicionaisPausados = JSON.parse(
   localStorage.getItem("adicionaisPausados") || "[]"
 );
-window.taxaCalculada = false; // 👈 CORREÇÃO AQUI (let -> window.taxaCalculada)
+window.taxaCalculada = false; // 👈 CORREÇÃO AQUI (Tornamos "window." para ser global)
 
 // ==========================================================
 // DECLARAÇÃO DE ELEMENTOS (Serão atribuídos no DOMContentLoaded)
@@ -311,7 +311,7 @@ window.atualizarTotalComTaxa = function () {
 };
 
 // SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
-window.atualizarBotaoWhatsApp = function () { // 👈 CORREÇÃO AQUI (function -> window.atualizarBotaoWhatsApp)
+window.atualizarBotaoWhatsApp = function () { // 👈 CORREÇÃO AQUI (Tornamos "window." para ser global)
   if (!revisaoConfirmar || !inputEndereco) return;
   const tipoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
   const tipo = tipoRadio ? tipoRadio.value : "entrega";
@@ -320,7 +320,7 @@ window.atualizarBotaoWhatsApp = function () { // 👈 CORREÇÃO AQUI (function 
 
   if (tipo === "entrega") {
     // Para ENTREGA, o botão SÓ é habilitado se a taxa foi calculada.
-    botaoDesabilitado = !window.taxaCalculada; // 👈 CORREÇÃO AQUI (taxaCalculada -> window.taxaCalculada)
+    botaoDesabilitado = !window.taxaCalculada; // 👈 CORREÇÃO AQUI (Chamamos a var global)
   } else {
     // Para RETIRADA, o botão está sempre habilitado.
     botaoDesabilitado = false;
@@ -349,7 +349,7 @@ ${it.obs ? `<br/><small style="opacity:.8">obs: ${it.obs}</small>` : ""}
   });
   revSubtotal.textContent = brl(subtotal);
   window.atualizarTotalComTaxa();
-  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Chamamos a função global)
 }
 
 function abrirModalProduto(el) {
@@ -449,7 +449,7 @@ async function enviarPedido() {
   const codigoPedido = gerarCodigoPedido(nomeCliente);
   if (sacola.length === 0) return alert("Sua sacola está vazia!");
 
-  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Chamamos a função global)
   if (revisaoConfirmar && revisaoConfirmar.disabled) {
     // A mensagem de erro agora é genérica
     return alert("Por favor, calcule a taxa de entrega ou selecione 'Retirada'.");
@@ -1200,7 +1200,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inputEndereco) {
     inputEndereco.addEventListener("input", () => {
       // Se o cliente digitar no campo de endereço DEPOIS de ter calculado a taxa
-      if (window.taxaCalculada) { // 👈 CORREÇÃO AQUI (taxaCalculada -> window.taxaCalculada)
+      if (window.taxaCalculada) { // 👈 CORREÇÃO AQUI
         window.taxaCalculada = false; // "Sujou" o cálculo, precisa recalcular
         window.atualizarBotaoWhatsApp(); // Trava o botão de novo
       }
@@ -1234,16 +1234,16 @@ document.addEventListener("DOMContentLoaded", () => {
           inputEndereco.disabled = true;
           resultadoEntrega.innerHTML =
             "ℹ️ Retirada no local selecionada. Sem taxa de entrega.";
-          window.taxaCalculada = true; // ✅ ADICIONE AQUI (Retirada é um estado "calculado" válido)
+          window.taxaCalculada = true; // ✅ CORREÇÃO AQUI
         } else {
           campoEndereco.style.display = "block";
           infoRetirada.style.display = "none";
           inputEndereco.disabled = false;
 
-          window.taxaCalculada = false; // ❌ ADICIONE AQUI (Trocou para entrega, força o recalculo)
+          window.taxaCalculada = false; // ❌ CORREÇÃO AQUI
         }
         window.atualizarTotalComTaxa();
-        window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
+        window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI
       }
     });
   });
@@ -1299,7 +1299,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 5. Força Estado Inicial ---
   atualizarSacola();
-  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Adiciona window.)
+  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI
   const tipoInicialRadio = document.querySelector(
     'input[name="tipoEntrega"]:checked'
   );

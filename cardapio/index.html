@@ -12,7 +12,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css" />
+   <link rel="stylesheet" href="style.css?v=1.1" />
 
     <style>
       /* 🔧 Ajuste visual das sugestões de endereço */
@@ -230,20 +230,29 @@
           </label>
 
 <div id="campoEndereco" style="margin-top: 10px;">
-            <label for="endereco">Endereço</label>
+            
+            <label for="endereco">Bairro</label>
             <input
               id="endereco"
               type="text"
-              placeholder="Rua, nº, bairro"
+              placeholder="Digite seu bairro (Ex: Vila Iapi)"
               autocomplete="off"
             />
             <ul id="sugestoes"></ul>
+
+            <label for="rua" style="margin-top: 10px; display: block;">Rua e Número</label>
+            <input 
+              id="rua" 
+              type="text" 
+              placeholder="Ex: Av. José Olegário de Barros, 1200" 
+              style="width: 100%;" 
+            />
 
             <label for="complemento" style="margin-top: 10px; display: block;">Complemento (Apto / Bloco / Casa)</label>
             <input 
               id="complemento" 
               type="text" 
-              placeholder="Ex: Apto 101, Bloco 5" 
+              placeholder="Ex: Apto 404, Bloco 5" 
               style="width: 100%;" 
             />
             <button
@@ -1225,7 +1234,7 @@ async function calcularEntrega() {
         }
       }
     </script>
-    <script type="module" src="script.js"></script>
+    <script type="module" src="script.js?v=1.1"></script>
     
   </body>
 </html>

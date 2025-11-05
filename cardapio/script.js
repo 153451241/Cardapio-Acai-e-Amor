@@ -311,16 +311,26 @@ window.atualizarTotalComTaxa = function () {
 };
 
 // SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
-window.atualizarBotaoWhatsApp = function () { // 👈 CORREÇÃO AQUI (Tornamos "window." para ser global)
+// SUBSTITUA A FUNÇÃO ANTIGA PELA NOVA VERSÃO CORRIGIDA
+window.atualizarBotaoWhatsApp = function () {
   if (!revisaoConfirmar || !inputEndereco) return;
   const tipoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
   const tipo = tipoRadio ? tipoRadio.value : "entrega";
 
-  let botaoDesabilitado = true; // Começa desabilitado por padrão
+  let botaoDesabilitado = true; // Começa desabilitado
 
   if (tipo === "entrega") {
-    // Para ENTREGA, o botão SÓ é habilitado se a taxa foi calculada.
-    botaoDesabilitado = !window.taxaCalculada; // 👈 CORREÇÃO AQUI (Chamamos a var global)
+    // LÓGICA CORRIGIDA:
+    // O botão deve estar DESABILITADO SE:
+    // 1. A taxa NÃO foi calculada
+    //    OU
+    // 2. O campo RUA está vazio
+    const ruaInput = document.getElementById("rua");
+    const rua = ruaInput ? ruaInput.value.trim() : "";
+    
+    // A MÁGICA ESTÁ AQUI
+    botaoDesabilitado = !window.taxaCalculada || !rua; 
+
   } else {
     // Para RETIRADA, o botão está sempre habilitado.
     botaoDesabilitado = false;
@@ -438,7 +448,7 @@ function gerarCodigoPedido(nome) {
   return `${prefixo}-${sufixo}`;
 }
 
-// SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
+// SUBSTITUA A FUNÇÃO ANTIGA POR ESTA NOVA
 async function enviarPedido() {
   if (!db) {
     alert(
@@ -449,31 +459,46 @@ async function enviarPedido() {
   const codigoPedido = gerarCodigoPedido(nomeCliente);
   if (sacola.length === 0) return alert("Sua sacola está vazia!");
 
-  window.atualizarBotaoWhatsApp(); // 👈 CORREÇÃO AQUI (Chamamos a função global)
+  window.atualizarBotaoWhatsApp();
   if (revisaoConfirmar && revisaoConfirmar.disabled) {
-    // A mensagem de erro agora é genérica
     return alert("Por favor, calcule a taxa de entrega ou selecione 'Retirada'.");
   }
 
   // Coleta os dados (igual antes)
   const tipoRadio = document.querySelector('input[name="tipoEntrega"]:checked');
   const tipoEntrega = tipoRadio ? tipoRadio.value : "entrega";
-  const endereco =
-    tipoEntrega === "retirada"
-      ? "Retirada no local"
-      : inputEndereco
-      ? inputEndereco.value.trim()
-      : "";
   const taxa = inputTaxa ? parseFloat(inputTaxa.value || "0") : 0;
+  
+  // --- 👇 LÓGICA DE ENDEREÇO ATUALIZADA 👇 ---
+  let enderecoFinal = "Retirada no local";
 
-  // 👇 LÓGICA DO COMPLEMENTO ADICIONADA AQUI 👇
-  const complementoInput = document.getElementById("complemento");
-  const complemento = complementoInput ? complementoInput.value.trim() : "";
-  let enderecoFinal = endereco; // Endereço base (Rua, N, Bairro)
-  if (complemento) {
-    enderecoFinal += `, ${complemento}`; // Endereço com o Apto/Bloco
+  if (tipoEntrega === "entrega") {
+    const bairroInput = document.getElementById("endereco"); // Este é o bairro
+    const ruaInput = document.getElementById("rua");
+    const complementoInput = document.getElementById("complemento");
+
+    const bairro = bairroInput ? bairroInput.value.trim() : "";
+    const rua = ruaInput ? ruaInput.value.trim() : "";
+    const complemento = complementoInput ? complementoInput.value.trim() : "";
+
+    // VALIDAÇÃO: Verifica se o Bairro (endereco) e a Rua foram preenchidos
+    if (!bairro || !rua) {
+      alert("Para entrega, por favor preencha os campos 'Bairro' e 'Rua e Número'.");
+      // Desbloqueia o botão para o usuário tentar de novo (se ele foi travado)
+      if (revisaoConfirmar) {
+         revisaoConfirmar.disabled = false;
+         revisaoConfirmar.textContent = "✅ Confirmar e enviar no WhatsApp";
+      }
+      return; // Para a execução
+    }
+
+    // Monta o endereço final
+    enderecoFinal = `${rua}, ${bairro}`; // Ex: "Av. José Olegário 1435, Vila Iapi"
+    if (complemento) {
+      enderecoFinal += `, ${complemento}`; // Ex: "Av. José Olegário 1435, Vila Iapi, Apto 101"
+    }
   }
-  // 👆 FIM DA ADIÇÃO 👆
+  // --- 👆 FIM DA LÓGICA DE ENDEREÇO 👆 ---
 
   const subtotal = sacola.reduce((acc, it) => acc + it.price, 0);
   const totalFinal = subtotal + (isNaN(taxa) ? 0 : taxa);
@@ -497,7 +522,7 @@ async function enviarPedido() {
   const pedido = {
     codigo: codigoPedido,
     nomeCliente: nomeCliente,
-    endereco: enderecoFinal, // 👈 USA O ENDEREÇO FINAL (com complemento)
+    endereco: enderecoFinal, // 👈 JÁ USA O ENDEREÇO FINAL (completinho)
     itens: sacola,
     subtotal,
     taxa,
@@ -535,7 +560,7 @@ async function enviarPedido() {
     )}*\n\n` +
     `*Pagamento:* ${formaPagamento}\n` +
     (obsPagamento ? `*Troco:* ${obsPagamento}\n` : "") +
-    `*Entrega:* ${enderecoFinal}\n`; // 👈 USA O ENDEREÇO FINAL (com complemento)
+    `*Entrega:* ${enderecoFinal}\n`; // 👈 JÁ USA O ENDEREÇO FINAL
 
   // **** NÚMERO DO WHATSAPP DA LOJA ****
   const numero = "5512991320722";
@@ -547,8 +572,8 @@ async function enviarPedido() {
   atualizarSacola();
   fecharModal(revisao);
   if (modalSucesso) {
-    modalSucesso.style.display = "flex"; // Mostra o pop-up
-    updateModalState(true); // Trava o scroll
+    modalSucesso.style.display = "flex";
+    updateModalState(true);
   }
   // --- FIM DO RESET ---
 
@@ -557,7 +582,6 @@ async function enviarPedido() {
     revisaoConfirmar.textContent = "✅ Confirmar e enviar no WhatsApp";
   }
 }
-
 // ==========================================================
 // FUNÇÕES DE ADMIN (Moderador, Adicionais)
 // ==========================================================
@@ -1207,6 +1231,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   // 👆 FIM DA ADIÇÃO 👆
+
+  // --- 👇 ADICIONE ESTE NOVO LISTENER AQUI 👇 ---
+  // (Para checar o botão CADA VEZ que o usuário digita a RUA)
+  const ruaInput = document.getElementById("rua");
+  if (ruaInput) {
+    ruaInput.addEventListener("input", () => {
+      window.atualizarBotaoWhatsApp(); // Atualiza o status do botão
+    });
+  }
+  // --- 👆 FIM DA ADIÇÃO 👆 ---
 
   document.querySelectorAll('input[name="tipoEntrega"]').forEach((radio) => {
     radio.addEventListener("change", () => {

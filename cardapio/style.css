@@ -1386,3 +1386,41 @@ CSS DE IMPRESSÃO (COMANDA TÉRMICA)
   font-size: 1.2rem;
   color: #eee;
 }
+
+/* =========================================================
+   BLOCO 3: CSS DO MAPA E PINO (FALTANDO)
+   ========================================================= */
+
+/* Garante que o mapa possa conter o alvo */
+#map-leaflet {
+    position: relative !important;
+}
+
+/* 1. O Alvo Visual (Pino Fixo) */
+#centro-mira-visual {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    
+    /* Desenho do Pino (Imagem oficial do Leaflet) */
+    width: 25px; 
+    height: 41px; 
+    background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    
+    /* Puxa o pino para cima (metade da largura, altura total) */
+    transform: translate(-50%, -100%); 
+    
+    z-index: 1000; /* Acima das ruas do mapa */
+    pointer-events: none; /* Deixa o clique "atravessar" o alvo */
+    filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.5));
+}
+
+/* 2. FORÇA O BOTÃO A FICAR CLICÁVEL */
+/* O rodapé do modal do mapa DEVE ter um z-index alto */
+.acai-modal-container .acai-modal-footer {
+    position: relative; /* Necessário para z-index funcionar */
+    z-index: 2000 !important; /* Ganha do mapa */
+}
